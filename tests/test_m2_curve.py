@@ -20,6 +20,21 @@ def test_sentinel():
     # TRAP-07
     with pytest.raises(DomainError):normalize(row(level='未知'),CURVE)
 
+def test_one_side_null_flow_retained():
+    out=normalize(row(inflow='NULL'),CURVE)
+    assert out['inflow'] is None and out['outflow']==0
+
+def test_one_side_sentinel_outflow_retained():
+    out=normalize(row(outflow='-'),CURVE)
+    assert out['outflow'] is None and out['inflow']==1
+
+def test_both_sides_missing_quarantined():
+    with pytest.raises(DomainError):normalize(row(inflow='N/A',outflow='NULL'),CURVE)
+
+def test_null_flow_ls_conversion():
+    out=normalize(row(inflow='2000',outflow='NULL',flow_unit='L/s'),CURVE)
+    assert out['inflow']==2 and out['outflow'] is None
+
 def test_curve_monotonic():
     with pytest.raises(DomainError):validate_curve([[100,10],[101,9]])
 

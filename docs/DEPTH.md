@@ -28,6 +28,8 @@
 | TRAP-14 | 同刻水文矛盾 | 静默填补或算错 | 明确隔离和守恒 | `app/modules/m2_curve/rules.py` | `tests/test_m2_curve.py::test_real_conflict` |
 | TRAP-15 | 升每秒换算 | 静默填补或算错 | 明确隔离和守恒 | `app/modules/m2_curve/rules.py` | `tests/test_m2_curve.py::test_unit_conversion` |
 | TRAP-23 | 午夜切分 | 静默填补或算错 | 明确隔离和守恒 | `app/modules/m5_budget/rules.py` | `tests/test_m5_budget.py::test_midnight_split` |
+| TRAP-24 | 单侧缺流 | 整段判缺测或拿推算值冒充观测 | 库容变化约束补齐，观测/推算分列，负水量不发布 | `app/modules/m5_budget/rules.py` `app/modules/m3_integrate/rules.py` | `tests/test_m5_budget.py::test_inflow_missing_full_day_is_filled` |
+| TRAP-25 | 补齐发布失败 | 半条日账落库或重复补量 | 整笔事务回滚保留旧版，按(station,date)幂等，失败后从已确认日期续跑 | `app/store.py` `app/modules/m5_budget/handler.py` | `tests/test_m5_publish.py` |
 
 ## 对账规则
 
@@ -36,4 +38,4 @@
 
 ## 已知不覆盖
 
-库容曲线采用线性分段，不作范围外推；流量与水位相邻点间线性变化。未建蒸发降雨及地下渗漏模型，收支差保留待人工归因。
+库容曲线采用线性分段，不作范围外推；流量与水位相邻点间线性变化。未建蒸发降雨、地下渗漏及外部调度模型，收支差保留待人工归因。单侧缺流补齐仅在整日库变可观测且另一侧观测完整时成立，库变不完整、两侧同缺或推算出负水量一律保留缺测。

@@ -19,6 +19,18 @@ def test_out_of_order():
 def test_gap_boundary_accepted():
     assert len(integrate([point('00:00','1'),point('02:00','1')],D(2))[0])==1
 
+def test_null_inflow_not_counted_as_observed():
+    a=dict(point('00:00','1'));b=dict(point('01:00','3'));a['inflow']=None
+    x,_=integrate([a,b],D(2));part=x[0]
+    assert part['in_m3']==0 and part['in_obs_hours']==0
+    assert part['out_m3']==0 and part['out_obs_hours']==1
+
+def test_null_outflow_keeps_inflow_integral():
+    a=point('00:00','1',qout=1);b=point('01:00','3',qout=1);b['outflow']=None
+    part=integrate([a,b],D(2))[0][0]
+    assert part['in_m3']==7200 and part['in_obs_hours']==1
+    assert part['out_m3']==0 and part['out_obs_hours']==0
+
 def test_real_gaps(raw):
     assert len(run(raw,stop=3,persist=False)['gaps'])>=1
 

@@ -11,10 +11,16 @@ def validate_curve(points):
     return curve
 def normalize(row,curve):
     out=dict(row);out['time']=instant(row['time'])
-    for key in ['level','inflow','outflow']:out[key]=number(row[key])
-    if row['flow_unit']=='L/s':out['inflow']/=1000;out['outflow']/=1000
+    out['level']=number(row['level'])
+    # 单侧缺流保留为None，供日账按库容变化推算，绝不静默当零。
+    out['inflow']=number(row['inflow'],nullable=True)
+    out['outflow']=number(row['outflow'],nullable=True)
+    if row['flow_unit']=='L/s':
+        if out['inflow'] is not None:out['inflow']/=1000
+        if out['outflow'] is not None:out['outflow']/=1000
     elif row['flow_unit']!='m3/s':raise DomainError('UNIT','流量单位无效')
-    if out['inflow']<0 or out['outflow']<0 or not curve[0][0]<=out['level']<=curve[-1][0]:raise DomainError('RANGE','流量或水位越界')
+    if (out['inflow'] is not None and out['inflow']<0) or (out['outflow'] is not None and out['outflow']<0) or not curve[0][0]<=out['level']<=curve[-1][0]:raise DomainError('RANGE','流量或水位越界')
+    if out['inflow'] is None and out['outflow'] is None:raise DomainError('MISSING','入出流同时缺失无法推算')
     v=number(row['version'])
     if v<1 or v!=v.to_integral():raise DomainError('RANGE','测次版本无效')
     out['version']=int(v);out['flow_unit']='m3/s';return out
